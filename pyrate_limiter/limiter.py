@@ -73,6 +73,29 @@ class Limiter:
         for item_id in sorted(identities):
             self.bucket_group[item_id].lock_release()
 
+    def request_bucket_gte_val(self, val, *identities):
+        self._init_buckets(identities)
+        now = self.time_function()
+
+        for rate in self._rates:
+            for item_id in identities:
+                bucket = self.bucket_group[item_id]
+                volume = bucket.size()
+
+                if volume < val:
+                    return False
+
+                # Determine rate's starting point, and check requests made during its time window
+                item_count, remaining_time = bucket.inspect_expired_items(now - rate.interval)
+                if item_count < val:
+                    if rate is rate_limiter._rates[-1]:
+                        bucket.get(volume - item_count)
+                    self._release_buckets(identities)
+                    return False
+
+        self._release_buckets(identities)
+        return True
+
     def try_acquire(self, *identities: str) -> None:
         """Attempt to acquire an item, or raise an error if a rate limit has been exceeded.
 
