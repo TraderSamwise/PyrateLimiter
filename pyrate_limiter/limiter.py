@@ -88,7 +88,7 @@ class Limiter:
                 # Determine rate's starting point, and check requests made during its time window
                 item_count, remaining_time = bucket.inspect_expired_items(now - rate.interval)
                 if item_count < val:
-                    if rate is rate_limiter._rates[-1]:
+                    if rate is self._rates[-1]:
                         bucket.get(volume - item_count)
                     self._release_buckets(identities)
                     return False
