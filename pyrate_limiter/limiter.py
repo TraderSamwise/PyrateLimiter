@@ -94,6 +94,8 @@ class Limiter:
                     # print('----------------')
                     if rate is self._rates[-1]:
                         bucket.get(volume - item_count)
+
+                if item_count < val:
                     self._release_buckets(identities)
                     return False
 
